@@ -1,0 +1,64 @@
+<script src="https://cdn.jsdelivr.net/gh/joeymalvinni/webrtc-ip/dist/bundle.dev.js"></script>
+<script type="module">
+
+
+    // Initialize the agent at application startup.
+    const fpPromise = import('https://openfpcdn.io/fingerprintjs/v3')
+        .then(FingerprintJS => FingerprintJS.load())
+    // Get the visitor identifier when you need it.
+    fpPromise
+        .then(fp => fp.get())
+        .then(result => {
+        // This is the visitor identifier:
+        const visitorId = result.visitorId
+        console.log(visitorId)
+        console.log(result)
+        document.getElementById("demo").innerHTML = visitorId;
+        document.getElementById("tekst").innerHTML = JSON.stringify(result);
+        
+        navigator.storage.estimate()
+        .then(({usage, quota}) => {
+            document.getElementById('answer').innerText = quota < 74176703488 ? 'Yes' : 'No'
+        })
+
+        var canvas = document.createElement('canvas');
+        var gl = canvas.getContext('webgl');
+
+        var debugInfo = gl.getExtension('WEBGL_debug_renderer_info');
+        var vendor = gl.getParameter(debugInfo.UNMASKED_VENDOR_WEBGL);
+        var renderer = gl.getParameter(debugInfo.UNMASKED_RENDERER_WEBGL);
+
+        document.getElementById('vendor').innerText = vendor;
+        document.getElementById('renderer').innerText = renderer;
+        })
+
+        getIPs().then(res => console.log(res.join('\n')))
+</script>
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta content="text/html;charset=utf-8" http-equiv="Content-Type">
+    <meta content="utf-8" http-equiv="encoding">
+<link rel="stylesheet" href="https://www.w3schools.com/w3css/4/w3.css">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Raleway">
+<style>
+body,h1,h2,h3,h4,h5 {font-family: "Raleway", sans-serif}
+</style>
+</head>
+<body>
+
+<h1>This page doesnt use cookies. I promise.</h1>
+<p>Anyway...</p>
+<p id="demo"></p>
+<p>Tekst hieronder</p>
+<p>Websites kunnen slechts basis informatie zien die ze nodig hebben om webpaginas goed te laten werken. Gegevens zoals cpu of hoeveelheid ram kan je dan ook niet detecteren via javascript.
+    Sommige info kan je wel via verschillende onrechtstreekse manieren achterhalen zoals of je incognito modus hebt opstaan en informatie over de GPU.
+</p>
+<p id="tekst">Tekst</p>
+<p>Incognito</p>
+<div id="answer"></div>
+<div id="GPU"></div>
+<p>Vendor: <span id="vendor"></span></p>
+<p>Card: <span id="renderer"></span></p>
+</body>
+</html>
