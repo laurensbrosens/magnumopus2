@@ -1,24 +1,21 @@
 <script src="https://cdn.jsdelivr.net/gh/joeymalvinni/webrtc-ip/dist/bundle.dev.js"></script>
 <script type="module">
+// Webrtc used to show IP
 
-
-    // Initialize the agent at application startup.
+    // FingerprintJS library used to generate unique fingerprint
     const fpPromise = import('https://openfpcdn.io/fingerprintjs/v3')
         .then(FingerprintJS => FingerprintJS.load())
-    // Get the visitor identifier when you need it.
     fpPromise
         .then(fp => fp.get())
         .then(result => {
-        // This is the visitor identifier:
         const visitorId = result.visitorId
         console.log(visitorId)
         console.log(result)
         document.getElementById("demo").innerHTML = visitorId;
-        document.getElementById("tekst").innerHTML = JSON.stringify(result);
-        
+        document.getElementById("variabelen").innerHTML = JSON.stringify(result);
         navigator.storage.estimate()
         .then(({usage, quota}) => {
-            document.getElementById('answer').innerText = quota < 74176703488 ? 'Yes' : 'No'
+            document.getElementById('answer').innerText = quota < 74176703488 ? 'Waarschijnlijk ja' : 'Waarschijnlijk nee'
         })
 
         var canvas = document.createElement('canvas');
@@ -30,9 +27,50 @@
 
         document.getElementById('vendor').innerText = vendor;
         document.getElementById('renderer').innerText = renderer;
+        fetch('https://magnumopus.azurewebsites.net/api/User/'+visitorId).then(response => response.json()).then(json => {
+            // Als de user al bestaat verhoog het aantal paginabezoeken.
+            var olduser = json;
+            document.getElementById('visits').innerText = "Je hebt deze pagina al "+olduser["visits2"] + " keer bezocht. En je hebt website1 "+olduser["visits1"]+" keer bezocht.";
+            olduser["visits2"] += 1;
+            fetch('https://magnumopus.azurewebsites.net/api/User', {
+                method: 'PUT',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify(olduser),
+            }).then(response => {
+                console.log(response.json());
+            })
+        })
+        .catch(error => {
+            // Als fingerprint niet teruggevonden wordt in database wordt een nieuwe user aangemaakt
+            document.getElementById('visits').innerText = "Je hebt deze site nog niet bezocht (met deze browser).";
+            console.log('https://magnumopus.azurewebsites.net/api/User/'+visitorId);
+            //console.log(error);
+            var newuser = {
+                "id": 0,
+                "name": "Bob",
+                "fingerprint": visitorId,
+                "visits1": 0,
+                "visits2": 0
+            }
+            console.log(newuser);
+            
+            
+            fetch('https://magnumopus.azurewebsites.net/api/User', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify(newuser),
+            }).then(response => {
+                console.log(response.json());
+            })
+            
+        })
         })
 
-        getIPs().then(res => console.log(res.join('\n')))
+        getIPs().then(res => console.log(res.join('\n'))) //Nog niet gebruikt
 </script>
 <!DOCTYPE html>
 <html lang="en">
@@ -41,24 +79,54 @@
     <meta content="utf-8" http-equiv="encoding">
 <link rel="stylesheet" href="https://www.w3schools.com/w3css/4/w3.css">
 <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Raleway">
+<script>
+    function showFunctie() { // Functie om blok te laten zien
+            var x = document.getElementById("hiddenDiv");
+            if (x.style.display === "none") {
+                x.style.display = "block";
+            } else {
+                x.style.display = "none";
+            }
+        }
+</script>
 <style>
 body,h1,h2,h3,h4,h5 {font-family: "Raleway", sans-serif}
+div {
+  margin-top: 100px;
+  margin-bottom: 100px;
+  margin-right: 150px;
+  margin-left: 80px;
+}
+#hiddenDiv{display: none}
+#variabelen{
+    overflow:scroll;
+}
 </style>
 </head>
 <body>
-
-<h1>This page doesnt use cookies. I promise.</h1>
-<p>Anyway...</p>
-<p id="demo"></p>
-<p>Tekst hieronder</p>
-<p>Websites kunnen slechts basis informatie zien die ze nodig hebben om webpaginas goed te laten werken. Gegevens zoals cpu of hoeveelheid ram kan je dan ook niet detecteren via javascript.
-    Sommige info kan je wel via verschillende onrechtstreekse manieren achterhalen zoals of je incognito modus hebt opstaan en informatie over de GPU.
-</p>
-<p id="tekst">Tekst</p>
-<p>Incognito</p>
-<div id="answer"></div>
-<div id="GPU"></div>
-<p>Vendor: <span id="vendor"></span></p>
-<p>Card: <span id="renderer"></span></p>
+<div>
+    <h1>Magnum Opus Browser Fingerpringint Website 2</h1>
+    <h2>This page doesnt use cookies. I promise.</h2>
+    <p>Gemaakt door Laurens Brosens</p>
+    <p>Websites kunnen slechts basis informatie zien die ze nodig hebben om webpaginas goed te laten werken. Gegevens zoals cpu of hoeveelheid ram kan je dan ook niet detecteren via javascript.
+        Sommige info kan je wel via verschillende onrechtstreekse manieren achterhalen zoals of je incognito modus hebt opstaan en informatie over de GPU.
+    </p>
+    <p>Als alles goed gaat staat hieronder de fingerprint die gegenereerd is voor deze browser.</p>
+    <p id="demo"></p>
+    <p id="visits"></p>
+    <p>Om een idee te geven wat voor variabelen er zoal gebruikt worden voor browser fingerprinting klik op de volgende knop.</p>
+    <button onclick="showFunctie()">Show me</button>
+    <div id="hiddenDiv">
+        <p id="variabelen"></p>
+    </div>
+    <p>Gebruikt deze browser incognito modus momenteel?</p>
+    <p id="answer"></p>
+    <p>De gebruikte methode om incognitie te detecteren is niet erg accuraat. Er bestaan betere methoden die complexer zijn.</p>
+    <div id="GPU"></div>
+    <p>Vendor van GPU: <span id="vendor"></span></p>
+    <p>GPU type: <span id="renderer"></span></p>
+    <p>Bezoek nu de andere website en check of je fingerprint hetzelfde is.</p>
+    <a href="https://laurensbrosens.github.io/magnumopus1.github.io/">Website 1</a>
+</div>
 </body>
 </html>
